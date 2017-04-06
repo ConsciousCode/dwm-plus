@@ -1,57 +1,64 @@
 /* See LICENSE file for copyright and license details. */
 
-typedef struct {
+#include <X11/Xlib.h>
+#include <X11/Xft/Xft.h>
+
+/* Because X.h loves to pollute the namespace */
+#define Font NotXFont
+
+struct Cur {
 	Cursor cursor;
-} Cur;
+};
 
-typedef struct Fnt {
-	Display *dpy;
+struct Font {
+	Display* dpy;
 	unsigned int h;
-	XftFont *xfont;
-	FcPattern *pattern;
-	struct Fnt *next;
-} Fnt;
+	XftFont* xfont;
+	FcPattern* pattern;
+	Font* next;
+};
 
-enum { ColFg, ColBg, ColCount }; /* Scm index */
-typedef XftColor *Scm;
+enum { ColFg, ColBg, ColCount }; /* Scheme index */
+typedef XftColor* Scheme;
 
-typedef struct {
+struct Draw {
 	unsigned int w, h;
-	Display *dpy;
+	Display* dpy;
 	int screen;
 	Window root;
 	Drawable drawable;
 	GC gc;
-	Scm scheme;
-	Fnt *fonts;
-} Drw;
+	Scheme scheme;
+	Font* fonts;
+};
 
 /* Drawable abstraction */
-Drw *drw_create(Display *dpy, int screen, Window win, unsigned int w, unsigned int h);
-void drw_resize(Drw *drw, unsigned int w, unsigned int h);
-void drw_free(Drw *drw);
+Draw* drw_create(Display* dpy, int screen, Window win, unsigned int w, unsigned int h);
+void drw_resize(Draw* drw, unsigned int w, unsigned int h);
+void drw_free(Draw* drw);
 
-/* Fnt abstraction */
-Fnt *drw_fontset_create(Drw* drw, const char *fonts[], size_t fontcount);
-void drw_fontset_free(Fnt* set);
-unsigned int drw_fontset_getwidth(Drw *drw, const char *text);
-void drw_font_getexts(Fnt *font, const char *text, unsigned int len, unsigned int *w, unsigned int *h);
+/* Font abstraction */
+Font* drw_fontset_create(Draw* drw, const char* fonts[], size_t fontcount);
+void drw_fontset_free(Font* set);
+unsigned int drw_fontset_getwidth(Draw* drw, const char* text);
+void drw_font_getexts(Font* font, const char* text, unsigned int len, unsigned int* w, unsigned int* h);
 
 /* Colorscheme abstraction */
-void drw_clr_create(Drw *drw, XftColor *dest, const char *clrname);
-Scm drw_scm_create(Drw *drw, const char *clrnames[], size_t clrcount);
+void drw_clr_create(Draw* drw, XftColor* dest, const char* clrname);
+Scheme drw_scm_create(Draw* drw, const char* clrnames[], size_t clrcount);
 
 /* Cursor abstraction */
-Cur *drw_cur_create(Drw *drw, int shape);
-void drw_cur_free(Drw *drw, Cur *cursor);
+Cur* drw_cur_create(Draw* drw, int shape);
+void drw_cur_free(Draw* drw, Cur* cursor);
 
 /* Drawing context manipulation */
-void drw_setfontset(Drw *drw, Fnt *set);
-void drw_setscheme(Drw *drw, Scm scm);
+void drw_setfontset(Draw* drw, Font* set);
+void drw_setscheme(Draw* drw, Scheme scm);
 
 /* Drawing functions */
-void drw_rect(Drw *drw, int x, int y, unsigned int w, unsigned int h, int filled, int invert);
-int drw_text(Drw *drw, int x, int y, unsigned int w, unsigned int h, unsigned int lpad, const char *text, int invert);
+void drw_rect(Draw* drw, int x, int y, unsigned int w, unsigned int h, int filled, int invert);
+int drw_text(Draw* drw, int x, int y, unsigned int w, unsigned int h, unsigned int lpad, const char* text, int invert);
 
 /* Map functions */
-void drw_map(Drw *drw, Window win, int x, int y, unsigned int w, unsigned int h);
+void drw_map(Draw* drw, Window win, int x, int y, unsigned int w, unsigned int h);
+
