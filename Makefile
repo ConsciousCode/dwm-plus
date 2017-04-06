@@ -3,8 +3,8 @@
 
 include config.mk
 
-SRC = drw.c dwm.c util.c
-OBJ = ${SRC:.c=.o}
+SRC = drw.cpp dwm.cpp util.cpp
+OBJ = ${SRC:.cpp=.o}
 
 all: options dwm
 
@@ -14,15 +14,15 @@ options:
 	@echo "LDFLAGS  = ${LDFLAGS}"
 	@echo "CC       = ${CC}"
 
-.c.o:
+.cpp.o:
 	@echo CC $<
 	@${CC} -c ${CFLAGS} $<
 
-${OBJ}: config.h config.mk
+${OBJ}: config.hpp config.mk
 
-config.h:
-	@echo creating $@ from config.def.h
-	@cp config.def.h $@
+config.hpp:
+	@echo creating $@ from config.def.hpp
+	@cp config.def.hpp $@
 
 dwm: ${OBJ}
 	@echo CC -o $@
@@ -35,8 +35,8 @@ clean:
 dist: clean
 	@echo creating dist tarball
 	@mkdir -p dwm-${VERSION}
-	@cp -R LICENSE TODO BUGS Makefile README config.def.h config.mk \
-		dwm.1 drw.h util.h ${SRC} dwm.png transient.c dwm-${VERSION}
+	@cp -R LICENSE TODO BUGS Makefile README config.def.hpp config.mk \
+		dwm.1 drw.hpp util.hpp ${SRC} dwm.png transient.cpp dwm-${VERSION}
 	@tar -cf dwm-${VERSION}.tar dwm-${VERSION}
 	@gzip dwm-${VERSION}.tar
 	@rm -rf dwm-${VERSION}
