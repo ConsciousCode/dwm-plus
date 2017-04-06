@@ -59,7 +59,7 @@
 #define ColBorder               2
 
 /* enums */
-enum { CurNormal, CurResize, CurMove, CurLast }; /* cursor */
+enum { CursorNormal, CursorResize, CursorMove, CursorLast }; /* cursor */
 enum { SchemeNorm, SchemeSel }; /* color schemes */
 enum { NetSupported, NetWMName, NetWMState, NetWMCheck,
        NetWMFullscreen, NetActiveWindow, NetWMWindowType,
@@ -271,10 +271,10 @@ ev_handler_t get_handler(int type) {
 
 static Atom wmatom[WMLast], netatom[NetLast];
 static int running = 1;
-static Cur* cursor[CurLast];
+static Cursor* cursor[CursorLast];
 static Scheme* scheme;
 static Display* dpy;
-static Draw* drw;
+static Drawable* drw;
 static Monitor* mons;
 static Monitor* selmon;
 static Window root, wmcheckwin;
@@ -494,12 +494,12 @@ cleanup(void)
 	XUngrabKey(dpy, AnyKey, AnyModifier, root);
 	while (mons)
 		cleanupmon(mons);
-	for (i = 0; i < CurLast; i++)
+	for (i = 0; i < CursorLast; i++)
 		drw_cur_free(drw, cursor[i]);
 	for (i = 0; i < LENGTH(colors); i++)
 		free(scheme[i]);
 	XDestroyWindow(dpy, wmcheckwin);
-	drw_free(drw);
+	delete drw;
 	XSync(dpy, False);
 	XSetInputFocus(dpy, PointerRoot, RevertToPointerRoot, CurrentTime);
 	XDeleteProperty(dpy, root, netatom[NetActiveWindow]);
@@ -573,7 +573,7 @@ configurenotify(XEvent* e)
 		sw = ev->width;
 		sh = ev->height;
 		if (updategeom() || dirty) {
-			drw_resize(drw, sw, bh);
+			drw->resize(sw, bh);
 			updatebars();
 			for (m = mons; m; m = m->next) {
 				for (c = m->clients; c; c = c->next)
@@ -1164,7 +1164,7 @@ movemouse(const Arg* arg)
 	ocx = c->x;
 	ocy = c->y;
 	if (XGrabPointer(dpy, root, False, MOUSEMASK, GrabModeAsync, GrabModeAsync,
-	    None, cursor[CurMove]->cursor, CurrentTime) != GrabSuccess)
+	    None, cursor[CursorMove]->cursor, CurrentTime) != GrabSuccess)
 		return;
 	if (!getrootptr(&x, &y))
 		return;
@@ -1320,7 +1320,7 @@ resizemouse(const Arg* arg)
 	ocx = c->x;
 	ocy = c->y;
 	if (XGrabPointer(dpy, root, False, MOUSEMASK, GrabModeAsync, GrabModeAsync,
-	                None, cursor[CurResize]->cursor, CurrentTime) != GrabSuccess)
+	                None, cursor[CursorResize]->cursor, CurrentTime) != GrabSuccess)
 		return;
 	XWarpPointer(dpy, None, c->win, 0, 0, 0, 0, c->w + c->bw - 1, c->h + c->bw - 1);
 	do {
@@ -1558,7 +1558,7 @@ setup(void)
 	sw = DisplayWidth(dpy, screen);
 	sh = DisplayHeight(dpy, screen);
 	root = RootWindow(dpy, screen);
-	drw = drw_create(dpy, screen, root, sw, sh);
+	drw = new Drawable(dpy, screen, root, sw, sh);
 	if (!drw_fontset_create(drw, fonts, LENGTH(fonts)))
 		die("no fonts could be loaded.");
 	lrpad = drw->fonts->h;
@@ -1580,9 +1580,9 @@ setup(void)
 	netatom[NetWMWindowTypeDialog] = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_DIALOG", False);
 	netatom[NetClientList] = XInternAtom(dpy, "_NET_CLIENT_LIST", False);
 	/* init cursors */
-	cursor[CurNormal] = drw_cur_create(drw, XC_left_ptr);
-	cursor[CurResize] = drw_cur_create(drw, XC_sizing);
-	cursor[CurMove] = drw_cur_create(drw, XC_fleur);
+	cursor[CursorNormal] = drw_cur_create(drw, XC_left_ptr);
+	cursor[CursorResize] = drw_cur_create(drw, XC_sizing);
+	cursor[CursorMove] = drw_cur_create(drw, XC_fleur);
 	/* init appearance */
 	scheme = (Scheme*)ecalloc(LENGTH(colors), sizeof(Scheme));
 	for (i = 0; i < LENGTH(colors); i++)
@@ -1603,7 +1603,7 @@ setup(void)
 	                PropModeReplace, (unsigned char*) netatom, NetLast);
 	XDeleteProperty(dpy, root, netatom[NetClientList]);
 	/* select events */
-	wa.cursor = cursor[CurNormal]->cursor;
+	wa.cursor = cursor[CursorNormal]->cursor;
 	wa.event_mask = SubstructureRedirectMask|SubstructureNotifyMask
 	                |ButtonPressMask|PointerMotionMask|EnterWindowMask
 	                |LeaveWindowMask|StructureNotifyMask|PropertyChangeMask;
@@ -1829,7 +1829,7 @@ updatebars(void)
 		m->barwin = XCreateWindow(dpy, root, m->wx, m->by, m->ww, bh, 0, DefaultDepth(dpy, screen),
 		                          CopyFromParent, DefaultVisual(dpy, screen),
 		                          CWOverrideRedirect|CWBackPixmap|CWEventMask, &wa);
-		XDefineCursor(dpy, m->barwin, cursor[CurNormal]->cursor);
+		XDefineCursor(dpy, m->barwin, cursor[CursorNormal]->cursor);
 		XMapRaised(dpy, m->barwin);
 	}
 }
