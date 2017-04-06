@@ -14,7 +14,7 @@ options:
 	@echo "LDFLAGS  = ${LDFLAGS}"
 	@echo "CC       = ${CC}"
 
-.cpp.o:
+.c.o:
 	@echo CC $<
 	@${CC} -c ${CFLAGS} $<
 
@@ -26,7 +26,7 @@ config.hpp:
 
 dwm: ${OBJ}
 	@echo CC -o $@
-	@${CC} -o $@ ${OBJ} ${LDFLAGS}
+	@${CC} ${FLAGS} -o $@ ${OBJ} ${LDFLAGS}
 
 clean:
 	@echo cleaning
@@ -35,8 +35,10 @@ clean:
 dist: clean
 	@echo creating dist tarball
 	@mkdir -p dwm-${VERSION}
-	@cp -R LICENSE TODO BUGS Makefile README config.def.hpp config.mk \
-		dwm.1 drw.hpp util.hpp ${SRC} dwm.png transient.cpp dwm-${VERSION}
+	@cp -R LICENSE TODO BUGS Makefile README \
+		config.def.hpp config.mk \
+		drw.hpp util.hpp transient.cpp \
+		dwm.1 ${SRC} dwm.png dwm-${VERSION}
 	@tar -cf dwm-${VERSION}.tar dwm-${VERSION}
 	@gzip dwm-${VERSION}.tar
 	@rm -rf dwm-${VERSION}
